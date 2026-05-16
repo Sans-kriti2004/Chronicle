@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  background: #FAFAF7;
+  color: #0F172A;
+}
+
+.chapter-line {
+  background: linear-gradient(180deg, #F59E0B, #14B8A6);
+}
+
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-amberline focus:ring-offset-2;
+}

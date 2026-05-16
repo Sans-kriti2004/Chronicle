@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.npm-cache/
+.env
+server/.env
+client/.env
+.vercel/
+.railway/
+dev-server.*.log
+*.log

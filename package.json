@@ -1,0 +1,25 @@
+{
+  "name": "chronicle",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chronicle - Goal Setting & Tracking Portal for Atomberg Technologies",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sans-kriti2004/Chronicle.git"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace server\" \"npm run dev --workspace client\"",
+    "build": "npm run build --workspace client",
+    "start": "npm run start --workspace server",
+    "seed": "npm run seed --workspace server",
+    "prisma:generate": "npm run prisma:generate --workspace server",
+    "prisma:migrate": "npm run prisma:migrate --workspace server"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

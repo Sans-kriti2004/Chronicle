@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(uuid())
+  name       String
+  email      String      @unique
+  password   String
+  role       Role        @default(EMPLOYEE)
+  managerId  String?
+  manager    User?       @relation("Reports", fields: [managerId], references: [id])
+  reports    User[]      @relation("Reports")
+  goalSheets GoalSheet[]
+  checkIns   CheckIn[]
+  auditLogs  AuditLog[]
+  createdAt  DateTime    @default(now())
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+model GoalSheet {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  cycleYear   Int
+  status      SheetStatus @default(DRAFT)
+  goals       Goal[]
+  checkIns    CheckIn[]
+  submittedAt DateTime?
+  approvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([userId, cycleYear])
+}
+
+enum SheetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  RETURNED
+}
+
+model Goal {
+  id            String        @id @default(uuid())
+  goalSheetId   String
+  goalSheet     GoalSheet     @relation(fields: [goalSheetId], references: [id])
+  thrustArea    String
+  title         String
+  description   String?
+  uomType       UoMType
+  target        Float
+  deadline      DateTime?
+  weightage     Float
+  isShared      Boolean       @default(false)
+  sharedOwnerId String?
+  isLocked      Boolean       @default(false)
+  status        GoalStatus    @default(NOT_STARTED)
+  achievements  Achievement[]
+  auditLogs     AuditLog[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+enum UoMType {
+  MIN
+  MAX
+  TIMELINE
+  ZERO
+}
+
+enum GoalStatus {
+  NOT_STARTED
+  ON_TRACK
+  COMPLETED
+}
+
+model Achievement {
+  id         String   @id @default(uuid())
+  goalId     String
+  goal       Goal     @relation(fields: [goalId], references: [id])
+  quarter    Quarter
+  actual     Float
+  score      Float
+  notes      String?
+  capturedAt DateTime @default(now())
+}
+
+enum Quarter {
+  Q1
+  Q2
+  Q3
+  Q4
+}
+
+model CheckIn {
+  id          String    @id @default(uuid())
+  goalSheetId String
+  goalSheet   GoalSheet @relation(fields: [goalSheetId], references: [id])
+  managerId   String
+  manager     User      @relation(fields: [managerId], references: [id])
+  quarter     Quarter
+  comment     String
+  createdAt   DateTime  @default(now())
+}
+
+model Cycle {
+  id              String  @id @default(uuid())
+  year            Int     @unique
+  goalSettingOpen Boolean @default(false)
+  q1Open          Boolean @default(false)
+  q2Open          Boolean @default(false)
+  q3Open          Boolean @default(false)
+  q4Open          Boolean @default(false)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  goalId    String?
+  goal      Goal?    @relation(fields: [goalId], references: [id])
+  action    String
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+}
