@@ -27,8 +27,8 @@ authRouter.post('/login', async (req, res, next) => {
     const token = jwt.sign(publicUser(user), process.env.JWT_SECRET, { expiresIn: '7d' });
     res.cookie('chronicle_token', token, {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      secure: true,
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
     res.json({ user: publicUser(user) });
