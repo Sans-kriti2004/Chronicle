@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import ArcHealth from '../components/ArcHealth';
 import Button from '../components/Button';
 import ChapterCard from '../components/ChapterCard';
 import Icon from '../components/Icon';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { api } from '../lib/api';
 import { statusLabel } from '../lib/scoreEngine';
 
 export default function EditorialDesk() {
+  const { user } = useAuth();
   const [team, setTeam] = useState([]);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState('');
@@ -21,8 +24,12 @@ export default function EditorialDesk() {
   }
 
   useEffect(() => {
-    load().catch((err) => setError(err.message));
-  }, []);
+    if (user?.role === 'MANAGER' || user?.role === 'ADMIN') {
+      load().catch((err) => setError(err.message));
+    }
+  }, [user?.role]);
+
+  if (user?.role === 'EMPLOYEE') return <Navigate to="/chronicle" replace />;
 
   async function approve(sheetId) {
     setError('');
@@ -85,7 +92,13 @@ export default function EditorialDesk() {
         {error && <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       </aside>
       <section>
-        {!selected && <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-slate-600">No Chronicles are on the editor's desk yet.</div>}
+        {!selected && (
+          <div className="rounded-lg border border-dashed border-amber-300 bg-white p-10 shadow-sm">
+            <p className="text-sm font-black uppercase text-amberline">Quiet desk</p>
+            <h3 className="mt-2 text-2xl font-black text-ink">Your editorial desk is empty.</h3>
+            <p className="mt-2 text-slate-600">No authors reporting to you yet.</p>
+          </div>
+        )}
         {selected && (
           <div className="space-y-5">
             <div className="flex flex-wrap items-start justify-between gap-4">

@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import Button from '../components/Button';
 import Icon from '../components/Icon';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { api } from '../lib/api';
 
 export default function PublishingHouse() {
+  const { user } = useAuth();
   const [org, setOrg] = useState([]);
   const [completion, setCompletion] = useState(null);
   const [audit, setAudit] = useState([]);
@@ -24,8 +27,13 @@ export default function PublishingHouse() {
   }
 
   useEffect(() => {
-    load().catch((err) => setError(err.message));
-  }, []);
+    if (user?.role === 'ADMIN') {
+      load().catch((err) => setError(err.message));
+    }
+  }, [user?.role]);
+
+  if (user?.role === 'EMPLOYEE') return <Navigate to="/chronicle" replace />;
+  if (user?.role === 'MANAGER') return <Navigate to="/editorial-desk" replace />;
 
   async function saveCycle() {
     await api('/api/admin/cycle', { method: 'PUT', body: { year: new Date().getFullYear(), ...cycle } });

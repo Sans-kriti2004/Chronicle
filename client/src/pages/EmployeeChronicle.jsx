@@ -53,6 +53,7 @@ export default function EmployeeChronicle() {
   const sheet = data?.sheet;
   const goals = sheet?.goals || [];
   const isPublished = sheet?.status === 'APPROVED';
+  const isAwaitingReview = sheet?.status === 'SUBMITTED';
 
   if (user?.role === 'MANAGER') return <Navigate to="/editorial-desk" replace />;
   if (user?.role === 'ADMIN') return <Navigate to="/publishing-house" replace />;
@@ -71,6 +72,11 @@ export default function EmployeeChronicle() {
           <div className="rounded-lg border border-slate-200 bg-white p-5">
             <p className="font-black">Your story is published.</p>
             <p className="mt-1 text-sm text-slate-600">Chapters are locked.</p>
+          </div>
+        ) : isAwaitingReview ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-5">
+            <p className="font-black">Your chronicle is awaiting the editor's review.</p>
+            <p className="mt-1 text-sm text-slate-600">No changes can be made until it is returned or approved.</p>
           </div>
         ) : (
           <>
@@ -95,7 +101,13 @@ export default function EmployeeChronicle() {
       <section className="relative">
         <div className="chapter-line absolute bottom-0 left-3 top-2 w-1 rounded-full" />
         <div className="space-y-5 pl-9">
-          {goals.length === 0 && <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-slate-600">Your story hasn't started yet. Create your first chapter.</div>}
+          {goals.length === 0 && (
+            <div className="rounded-lg border border-dashed border-amber-300 bg-white p-10 shadow-sm">
+              <p className="text-sm font-black uppercase text-amberline">Blank first page</p>
+              <h3 className="mt-2 text-2xl font-black text-ink">Your story hasn't started yet.</h3>
+              <p className="mt-2 max-w-xl text-slate-600">Create your first chapter and start shaping this year's Chronicle.</p>
+            </div>
+          )}
           {goals.map((goal) => <ChapterCard key={goal.id} goal={goal} />)}
         </div>
       </section>
