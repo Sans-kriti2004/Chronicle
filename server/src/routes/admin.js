@@ -1,7 +1,9 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../lib/prisma.js';
 
 export const adminRouter = Router();
+const DEFAULT_USER_PASSWORD = 'Welcome@123';
 
 adminRouter.get('/org', async (req, res, next) => {
   try {
@@ -10,6 +12,61 @@ adminRouter.get('/org', async (req, res, next) => {
       orderBy: [{ role: 'asc' }, { name: 'asc' }]
     });
     res.json({ users });
+  } catch (err) {
+    next(err);
+  }
+});
+
+adminRouter.post('/users', async (req, res, next) => {
+  try {
+    const name = String(req.body.name || '').trim();
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const role = String(req.body.role || '').trim();
+    const managerId = req.body.managerId || null;
+    const validRoles = ['EMPLOYEE', 'MANAGER', 'ADMIN'];
+
+    if (!name) return res.status(400).json({ message: 'Full Name is required' });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: 'A valid email is required' });
+    }
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: 'Choose a valid role' });
+    }
+    if (role === 'EMPLOYEE' && !managerId) {
+      return res.status(400).json({ message: 'Reports To is required for employees' });
+    }
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) return res.status(409).json({ message: 'A user with this email already exists' });
+
+    if (managerId) {
+      const manager = await prisma.user.findUnique({ where: { id: managerId } });
+      if (!manager || manager.role !== 'MANAGER') {
+        return res.status(400).json({ message: 'Reports To must be an existing manager' });
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(DEFAULT_USER_PASSWORD, 10);
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        role,
+        managerId: role === 'EMPLOYEE' ? managerId : null,
+        password: hashedPassword
+      },
+      select: { id: true, name: true, email: true, role: true, managerId: true, createdAt: true }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user.id,
+        action: 'ADMIN_CREATED_USER',
+        newValue: `${user.name} (${user.email}) was added as ${user.role}`
+      }
+    });
+
+    res.status(201).json({ user, defaultPassword: DEFAULT_USER_PASSWORD });
   } catch (err) {
     next(err);
   }
